@@ -1,0 +1,25 @@
+{
+  "name": "react_map",
+  "version": "1.0.0",
+  "description": "geolocalisacion",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eldermcarrillo/react_map.git"
+  },
+  "keywords": [
+    "react",
+    "geolocation",
+    "webpack",
+    "apigooglemap"
+  ],
+  "author": "eldermcarrillo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eldermcarrillo/react_map/issues"
+  },
+  "homepage": "https://github.com/eldermcarrillo/react_map#readme"
+}
