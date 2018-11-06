@@ -20,15 +20,10 @@ const htmlWebpackPlugin = new HtmlWebPackPlugin({
 });
 
 module.exports = {
-  entry: './src/components/search/index.js',
+  entry: './src/containers/markers/index.js',
   output: {
     filename: 'watchfile.bundle.js',
     path: path.resolve(__dirname, 'dist')
-  },
-  devServer: {
-    contentBase: './src/components/search/index.js',
-    hot: true,
-    open: true
   },
   module: {
     rules: [

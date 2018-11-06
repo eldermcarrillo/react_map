@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack --mode development --open ./webpack.config.js",
+    "start": "webpack-dev-server --mode development",
     "build": "webpack --mode production"
   },
   "repository": {
@@ -45,8 +45,15 @@
   },
   "dependencies": {
     "babel-preset-stage-1": "^6.1.18",
+    "google-map-react": "^1.0.9",
+    "google-maps-react": "^2.0.2",
     "lodash": "^4.17.11",
+    "point-in-polygon": "^1.0.1",
     "react": "^16.6.0",
-    "react-dom": "^16.6.0"
+    "react-bootstrap": "^0.32.4",
+    "react-dom": "^16.6.0",
+    "react-google-maps": "^9.4.5",
+    "styled-components": "^4.0.3",
+    "validator": "^10.8.0"
   }
 }
