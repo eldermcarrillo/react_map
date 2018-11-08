@@ -1,14 +1,24 @@
-import React from "react";
-import ReactDOM from "react-dom";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { render } from "react-dom";
 
-import Markers from './content'
+import { Provider } from 'react-redux';
+import { createStore, applyMiddleware, compose } from 'redux';
+import thunk from 'redux-thunk';
 
-//asdsa
+import Markers from './content';
+import rootReducer from '../../rootReducer';
 
-const Store = () => {
-    return <div>
-              <Markers/>
-           </div>
-  }
+const store = createStore(
+  rootReducer,
+  compose(
+    applyMiddleware(thunk),
+    window.devToolsExtension ? window.devToolsExtension() : f => f
+  )
+);
 
-  ReactDOM.render(<Store/>, document.getElementById("index"));
+ReactDOM.render(
+  <Provider store={store}>
+    <Markers/>
+  </Provider>, document.getElementById('root')
+);

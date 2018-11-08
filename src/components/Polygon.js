@@ -30,3 +30,14 @@ export default class Polyline extends Component {
     return null
   }
 }
+
+
+return <Polygon
+                          key={i}
+                          paths={item.poligon}
+                          strokeColor="#0000FF"
+                          strokeOpacity={0.8}
+                          strokeWeight={2}
+                          fillColor="#0000FF"
+                          fillOpacity={0.35}
+                        />

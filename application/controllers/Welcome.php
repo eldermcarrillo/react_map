@@ -60,6 +60,6 @@ class Welcome extends CI_Controller {
 
 					$this->session->set_userdata($data);
 
-		$this->load->view('welcome_message');
+		$this->load->view('index');
 	}
 }

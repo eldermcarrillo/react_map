@@ -1,0 +1,6 @@
+//export const ROOT = window.location .protocol + "//" + window.location.host + "/" + window.location.pathname.split('/')[1]+''
+export const API = window.location .protocol + "//" + window.location.host + "/" + window.location.pathname.split('/')[1]+'/api/'
+//export const ASSETS = window.location .protocol + "//" + window.location.host + "/" + window.location.pathname.split('/')[1]+'/public/'
+//export const imageProfiles = window.location .protocol + "//" + window.location.host + "/" + window.location.pathname.split('/')[1]+'/uploaded/img/users/'
+//export const audios = window.location .protocol + "//" + window.location.host + "/" + window.location.pathname.split('/')[1]+'/uploaded/audio/'
+//export const images = window.location .protocol + "//" + window.location.host + "/" + window.location.pathname.split('/')[1]+'/uploaded/img/imgs/'
