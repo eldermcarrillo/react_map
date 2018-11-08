@@ -225,13 +225,14 @@ class Markers extends React.Component {
     });
   }
   pointpolygon(row) {
-    return true
+    return 'hola'
   }
   render() {
     const { errors } = this.state;
     const fig = [],
     poly=this.state.nom_poly,
     polys =this.state.polygonCoords;
+
     const columns = [
       {
         Header: () => <b>Name</b>,
@@ -251,7 +252,7 @@ class Markers extends React.Component {
       {
         Header: () => <b>Lng</b>,
         Cell: row => (
-          <center><button type="button" onClick={(e) => this.addSelection(row)} className="btn btn-success"><i className="glyphicon glyphicon-plus"></i></button></center>
+            this.pointpolygon(row)
         ),
         filterable: false
       },
