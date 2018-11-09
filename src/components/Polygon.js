@@ -1,43 +1,47 @@
-import { Component } from 'react'
+const { compose, withProps } = require("recompose");
+const {
+  withScriptjs,
+  withGoogleMap,
+  GoogleMap,
+} = require("react-google-maps");
+const { DrawingManager } = require("react-google-maps/lib/components/drawing/DrawingManager");
 
-export default class Polyline extends Component {
-  renderPolylines () {
-    const { marke, map, maps } = this.props
-
-    /** Example of rendering geodesic polyline */
-    let geodesicPolyline = new maps.Polyline({
-      path: marke,
-      geodesic: true,
-      strokeColor: '#00a1e1',
-      strokeOpacity: 1.0,
-      strokeWeight: 4
-    })
-    geodesicPolyline.setMap(map)
-
-    /** Example of rendering non geodesic polyline (straight line) */
-    let nonGeodesicPolyline = new maps.Polyline({
-      path: marke,
-      geodesic: false,
-      strokeColor: '#e4e4e4',
-      strokeOpacity: 0.7,
-      strokeWeight: 3
-    })
-    nonGeodesicPolyline.setMap(map)
-  }
-
-  render () {
-    this.renderPolylines()
-    return null
-  }
-}
-
-
-return <Polygon
-                          key={i}
-                          paths={item.poligon}
-                          strokeColor="#0000FF"
-                          strokeOpacity={0.8}
-                          strokeWeight={2}
-                          fillColor="#0000FF"
-                          fillOpacity={0.35}
-                        />
+const MapWithADrawingManager = compose(
+  withProps({
+    googleMapURL: "https://maps.googleapis.com/maps/api/js?key=AIzaSyDpH4E0qQ0qRlpDz3YHscKFU0_I0xo4UKU&v=3.exp&libraries=geometry,drawing,places",
+    loadingElement: <div style={{ height: `100%` }} />,
+    containerElement: <div style={{ height: `400px` }} />,
+    mapElement: <div style={{ height: `100%` }} />,
+  }),
+  withScriptjs,
+  withGoogleMap
+)(props =>
+  <GoogleMap
+    defaultZoom={8}
+    defaultCenter={new google.maps.LatLng(12.41933674043029,-84.94020919557755)}
+  >
+    <DrawingManager
+      defaultDrawingMode={google.maps.drawing.OverlayType.CIRCLE}
+      defaultOptions={{
+        drawingControl: true,
+        drawingControlOptions: {
+          position: google.maps.ControlPosition.TOP_CENTER,
+          drawingModes: [
+            google.maps.drawing.OverlayType.CIRCLE,
+            google.maps.drawing.OverlayType.POLYGON,
+            google.maps.drawing.OverlayType.POLYLINE,
+            google.maps.drawing.OverlayType.RECTANGLE,
+          ],
+        },
+        circleOptions: {
+          fillColor: `#ffff00`,
+          fillOpacity: 1,
+          strokeWeight: 5,
+          clickable: false,
+          editable: true,
+          zIndex: 1,
+        },
+      }}
+    />
+  </GoogleMap>
+);

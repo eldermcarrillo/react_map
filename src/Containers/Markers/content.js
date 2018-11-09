@@ -13,6 +13,7 @@ import isEmpty from 'lodash/isEmpty';
 import GoogleMapReact from 'google-map-react';
 
 import { Map, InfoWindow, Marker, GoogleApiWrapper, Polygon } from 'google-maps-react';
+import { Map as Mappoly ,Polygon as Polygon2 ,Polyline } from 'google-maps-react';
 
 import { postRequest, getRequest, getlistRequest } from '../../actions/httpActions';
 import { addFlashMessageModal } from '../../actions/flashMessages';
@@ -51,7 +52,12 @@ class Markers extends React.Component {
       markerdt: [],
       datadt: [],
       polygonCoords: [],
-      nom_poly :[]
+      nom_poly: [],
+      latp: '',
+      lngp: '',
+      namep: '',
+      datap: [],
+      dataline: []
     }
 
     this.onChange = this.onChange.bind(this);
@@ -82,10 +88,16 @@ class Markers extends React.Component {
     this.setState({ [e.target.name]: e.target.value });
   }
   onSubmit(e) {
+   
     e.preventDefault();
-    if (this.isValid()) {
-      this.POST('new_marker', 'markers');
+    if(e.target.name=="btn-guardar-poligono"){
+       this.POST('new_polygon', 'markers');
+    }else{
+      if (this.isValid()) {
+        this.POST('new_marker', 'markers');
+      }
     }
+
   }
   validateInput(e) {
     let errors = {};
@@ -98,6 +110,9 @@ class Markers extends React.Component {
     if (Validator.isEmpty(String(e.lng))) {
       errors.lng = 'Este campo es requerido';
     }
+  /*  if (Validator.isEmpty(String(e.namep))) {
+      errors.e.namep = 'Este campo es requerido';
+    }*/
     return {
       errors,
       isValid: isEmpty(errors)
@@ -117,18 +132,16 @@ class Markers extends React.Component {
       lat: e.lat,
       lng: e.lng
     });
-    console.log(this.state.polygonCoords);
     var array_polys = this.state.polygonCoords;
-    var array_pol =[];
+    var array_pol = [];
     var poin_state = ' ';
-    this.state.nom_poly.map(function (item,i) {
-      array_pol =[];
-      console.log("----------")
-      array_polys[0][item].map(function (item,i) {
-        array_pol.push( [item.lat ,item.lng]);
+    this.state.nom_poly.map(function (item, i) {
+      array_pol = [];
+      array_polys[0][item].map(function (item, i) {
+        array_pol.push([item.lat, item.lng]);
       })
       console.log(array_pol);
-      console.log(inside([e.lat, e.lng], array_pol ));
+      console.log(inside([e.lat, e.lng], array_pol));
     })
 
   }
@@ -137,14 +150,17 @@ class Markers extends React.Component {
   }
 
   onMapClicked(props, map, e) {
-    let location = this.state.position;
-    location.lat = e.latLng.lat();
-    location.lng = e.latLng.lng();
+    var arrayp = [];
+    this.state.datap.push({lat : e.latLng.lat(), lng : e.latLng.lng()});
+
+    arrayp = this.state.datap;
 
     this.setState({
-      position: location
+      latp : e.latLng.lat(),
+      lngp : e.latLng.lng(),
+      datap : arrayp
     })
-    console.log(this.state.position);
+    console.log(this.state.namep);
   }
   refreshTable(e) {
     this.childTablePhrases.filterAll(e);
@@ -182,27 +198,27 @@ class Markers extends React.Component {
     // this.setState({ isLoading: true, typeOption: 'get_polygons' });
     this.props.getlistRequest(this.state, this.state.id, 'markers').then(
       (response) => {
-        var aux ='';
+        var aux = '';
         var dt = [];
         var nmpoly = [];
-        response.data.data.forEach(function (key,i) {
+        response.data.data.forEach(function (key, i) {
           var lt = key.lat;
           var ln = key.lng;
           var nam = key.name;
 
-          if(aux == key.name){
-            dt[nam].push({ lat : parseFloat(lt) , lng : parseFloat(ln)});
-          }else{
+          if (aux == key.name) {
+            dt[nam].push({ lat: parseFloat(lt), lng: parseFloat(ln) });
+          } else {
             dt[nam] = [];
             nmpoly.push(nam);
-            dt[nam].push({ lat :parseFloat(lt) , lng : parseFloat(ln)});
+            dt[nam].push({ lat: parseFloat(lt), lng: parseFloat(ln) });
           }
           aux = key.name;
         });
         this.setState({
-          polygonCoords : [dt],
-          nom_poly : nmpoly
-        }); 
+          polygonCoords: [dt],
+          nom_poly: nmpoly
+        });
       },
       (err) => {
         if (err.response.status == 401) {
@@ -217,22 +233,41 @@ class Markers extends React.Component {
       }
     );
   }
-
-
   datamarkers(data) {
     this.setState({
-      datadt: data
+      datadt: data,
+      dataline :[]
     });
+
+   var array_line = [];
+
+   data.map(function (item, i) {
+    array_line.push({lat:parseFloat(item.lat),lng: parseFloat(item.lng)});
+   });
+   this.setState({
+    dataline :array_line
+   });
   }
   pointpolygon(row) {
-    return 'hola'
+    var array_polys = this.state.polygonCoords;
+    var array_pol = [];
+    var figura = '';
+    var estado = '';
+    this.state.nom_poly.map(function (item, i) {
+      array_pol = [];
+      array_polys[0][item].map(function (item, i) {
+        array_pol.push([item.lat, item.lng]);
+      })
+      estado = inside([parseFloat(row.original.lat), parseFloat(row.original.lng)], array_pol);
+      if (estado) {
+        figura = item;
+      }
+    });
+    return figura;
   }
   render() {
     const { errors } = this.state;
-    const fig = [],
-    poly=this.state.nom_poly,
-    polys =this.state.polygonCoords;
-
+    const poly = this.state.nom_poly, polys = this.state.polygonCoords ,poly2 =this.state.datap,polyline = this.state.dataline;
     const columns = [
       {
         Header: () => <b>Name</b>,
@@ -250,15 +285,13 @@ class Markers extends React.Component {
         filterable: false
       },
       {
-        Header: () => <b>Lng</b>,
-        Cell: row => (
-            this.pointpolygon(row)
+        Header: () => <b>Estado Point</b>,
+        Cell: (row) => (
+          this.pointpolygon(row)
         ),
         filterable: false
       },
-];
-
-
+    ];
     return (
       <div>
         <div className="row">
@@ -273,46 +306,48 @@ class Markers extends React.Component {
             <Tab eventKey={1} title="Markers">
               <div className="container">
                 <div className="row">
-                  <div className="col-md-4">
-                    <div className={classnames("form-group", { 'has-error': errors.marker })}>
-                      <TextFieldGroup
-                        error={errors.marker}
-                        label="Nombre"
-                        onChange={this.onChange}
-                        value={this.state.marker}
-                        field="marker"
-                        placeHolder="Ingrese nombre del marcador"
-                        required="true"
-                      />
+                  <div className="col-md-12" style={{ paddingTop: '10px' }}>
+                    <div className="col-md-4">
+                      <div className={classnames("form-group", { 'has-error': errors.marker })}>
+                        <TextFieldGroup
+                          error={errors.marker}
+                          label="Nombre"
+                          onChange={this.onChange}
+                          value={this.state.marker}
+                          field="marker"
+                          placeHolder=""
+                          required="true"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className={classnames("form-group", { 'has-error': errors.lat })}>
-                      <TextFieldGroup
-                        error={errors.lat}
-                        label="Latitud"
-                        onChange={this.onChange}
-                        value={this.state.lat}
-                        field="lat"
-                        placeHolder=""
-                        required="true"
-                      />
+                    <div className="col-md-4">
+                      <div className={classnames("form-group", { 'has-error': errors.lat })}>
+                        <TextFieldGroup
+                          error={errors.lat}
+                          label="Latitud"
+                          onChange={this.onChange}
+                          value={this.state.lat}
+                          field="lat"
+                          placeHolder=""
+                          required="true"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className={classnames("form-group", { 'has-error': errors.lng })}>
-                      <TextFieldGroup
-                        error={errors.lng}
-                        label="Longitud"
-                        onChange={this.onChange}
-                        value={this.state.lng}
-                        field="lng"
-                        placeHolder=""
-                        required="true"
-                      />
+                    <div className="col-md-4">
+                      <div className={classnames("form-group", { 'has-error': errors.lng })}>
+                        <TextFieldGroup
+                          error={errors.lng}
+                          label="Longitud"
+                          onChange={this.onChange}
+                          value={this.state.lng}
+                          field="lng"
+                          placeHolder=""
+                          required="true"
+                        />
+                      </div>
                     </div>
+                    <button disabled={this.state.isLoading} onClick={this.onSubmit} className="btn btn-primary pull-right">Guardar</button>
                   </div>
-                  <button disabled={this.state.isLoading} onClick={this.onSubmit} className="btn btn-primary pull-right">Guardar</button>
                 </div>
                 <div className="row" style={{ paddingTop: '10px' }}>
                   <div className="col-md-12">
@@ -336,48 +371,113 @@ class Markers extends React.Component {
               </div>
             </Tab>
             <Tab eventKey={2} title="Poligonos">
-              <div className="row">
-                <div className="col-md-6" style={{ height: '30px' }}>
-                  <Table
-                    columns={columns}
-                    controller="Markers"
-                    type="get_markers"
-                    date="false"
-                    excel="false"
-                    ref={ref => this.childTablePhrases = ref}
-                    datamarkers={this.datamarkers}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <Map google={this.props.google}
-                    style={{ width: '100%', height: '60vh', position: 'relative' }}
-                    className={'map'}
-                    initialCenter={this.props.center}
-                    zoom={this.props.zoom}>
-                    {
-                      poly.map(function (item,i) {
-                        return <Polygon
-                          key={i}
-                          paths={polys[0][item]}
-                          strokeColor="#0000FF"
-                          strokeOpacity={0.8}
-                          strokeWeight={2}
-                          fillColor="#0000FF"
-                          fillOpacity={0.35}
+              <div className="container">
+                <div className="row">
+                  <div className="col-md-12" style={{ paddingTop: '10px' }}>
+                    <div className="col-md-4">
+                      <div className={classnames("form-group", { 'has-error': errors.namep })}>
+                        <TextFieldGroup
+                          error={errors.namep}
+                          label="Nombre Figura"
+                          onChange={this.onChange}
+                          value={this.state.namep}
+                          field="namep"
+                          placeHolder=""
+                          required="true"
                         />
-                      })
-                    }
-                    {
-                      this.state.datadt.map(function (item, i) {
-                        return <Marker
-                          key={i}
-                          title={item.name}
-                          name={'punto'}
-                          text={item.name}
-                          position={{ lat: item.lat, lng: item.lng }} />
-                      })
-                    }
-                  </Map>
+                      </div>
+                    </div>
+                    <div className="col-md-4">
+
+                    </div>
+                    <div className="col-md-4">
+
+                    </div>
+                    <button name="btn-guardar-poligono" disabled={this.state.isLoading} onClick={this.onSubmit} className="btn btn-primary pull-right">Guardar</button>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-12">
+                    <Mappoly google={this.props.google}
+                      style={{ width: '100%', height: '60vh', position: 'relative' }}
+                      className={'map'}
+                      initialCenter={this.props.center}
+                      zoom={this.props.zoom}
+                      onClick={this.onMapClicked}
+                      
+                      >
+                      {
+                          poly2.map(function (item, i) {
+                              return <Polyline
+                              key={i}
+                              path={poly2}
+                              strokeColor="#0000FF"
+                              strokeOpacity={0.8}
+                              strokeWeight={2} />
+                          })
+                        }
+                    </Mappoly>
+                  </div>
+                </div>
+              </div>
+            </Tab>
+            <Tab eventKey={3} title="Geoposición">
+              <div className="container">
+                <div className="row">
+                  <div className="col-md-12" style={{ paddingTop: '10px' }}>
+                    <div className="col-md-6" style={{ height: '30px' }}>
+                      <Table
+                        columns={columns}
+                        controller="Markers"
+                        type="get_markers"
+                        date="false"
+                        excel="false"
+                        ref={ref => this.childTablePhrases = ref}
+                        datamarkers={this.datamarkers}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <Map google={this.props.google}
+                        style={{ width: '100%', height: '60vh', position: 'relative' }}
+                        className={'map'}
+                        initialCenter={this.props.center}
+                        zoom={this.props.zoom}>
+                        {
+                          poly.map(function (item, i) {
+                            return <Polygon
+                              key={i}
+                              paths={polys[0][item]}
+                              strokeColor="#0000FF"
+                              strokeOpacity={0.8}
+                              strokeWeight={2}
+                              fillColor="#0000FF"
+                              fillOpacity={0.35}
+                            />
+                          })
+                        }
+                        {
+                          this.state.datadt.map(function (item, i) {
+                            return <Marker
+                              key={i}
+                              title={item.name}
+                              name={'punto'}
+                              text={item.name}
+                              position={{ lat: item.lat, lng: item.lng }} />
+                          })
+                        }
+                        {
+                          polyline.map(function (item, i) {
+                            return  <Polyline
+                            key={i}
+                            path= {polyline}
+                            strokeColor="#808B96"
+                            strokeOpacity={0.8}
+                            strokeWeight={2} />
+                          })
+                        }
+                      </Map>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Tab>
@@ -397,6 +497,6 @@ const MarkersToRedux = connect(null, { postRequest, getRequest, addFlashMessageM
 
 export default GoogleApiWrapper(
   (props) => ({
-    apiKey: props.Key
+    apiKey: props.Key,
   }
   ))(MarkersToRedux);

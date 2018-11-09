@@ -115,7 +115,46 @@ class Markers extends REST_Controller {
                         $this->response(array('data' => ['message' => 'Markador almacenado satifactoriamente.']), REST_Controller::HTTP_CREATED);
                     }
             }else{
+                if ($this->post('typeOption') == 'new_polygon') {
+                    $this->form_validation->set_data($this->post());
+                    $rules = array(
+                        array(
+                            'field'   => 'namep',
+                            'label'   => 'namep',
+                            'rules'   => 'required'
+                        ),
+                    );
+                    $this->form_validation->set_rules($rules);
+                    $errors_array = array();
+
+                    if ($this->form_validation->run() == FALSE)
+                    {
+                        foreach($rules as $row){
+                            $field = $row['field'];
+                            $error = form_error($field);
+                            if($error){
+                                $errors_array[$field] = $error;
+                            }
+                        }
+
+                        $this->response(array('errors' => $errors_array), REST_Controller::HTTP_UNPROCESSABLE_ENTITY);
+                    }
+                    else
+                    {
+                        $data = array(
+                           'name' => $this->post('namep'),
+                        );
+
+                        $this->db->insert('polygons', $data);
+                        $insert_id = $this->db->insert_id();
+
+                        
+
+                        $this->response(array('data' => ['message' => 'Markador almacenado satifactoriamente.']), REST_Controller::HTTP_CREATED);
+                    }
+            }else{
                 $this->response('', REST_Controller::HTTP_NO_CONTENT);
+            }
             }
 
         } catch (Firebase\JWT\SignatureInvalidException $e){
