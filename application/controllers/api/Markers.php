@@ -147,10 +147,17 @@ class Markers extends REST_Controller {
 
                         $this->db->insert('polygons', $data);
                         $insert_id = $this->db->insert_id();
-
-                        
-
-                        $this->response(array('data' => ['message' => 'Markador almacenado satifactoriamente.']), REST_Controller::HTTP_CREATED);
+                        foreach($this->post('datap') as $row)
+                        {
+                            $data_points = array(
+                                'lat' => $row['lat'],
+                                'lng' => $row['lng'],
+                                'id_polygons' => $insert_id,
+                             );
+                            $this->db->insert('points', $data_points);
+                        }
+                    
+                        $this->response(array('data' => ['message' => 'Polygono almacenado exitosamente' ]), REST_Controller::HTTP_CREATED);
                     }
             }else{
                 $this->response('', REST_Controller::HTTP_NO_CONTENT);
