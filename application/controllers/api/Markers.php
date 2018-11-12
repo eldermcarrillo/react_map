@@ -32,8 +32,7 @@ class Markers extends REST_Controller {
         try {
             $this->decode = JWT::decode((isset(apache_request_headers()['Authorization'])) ? apache_request_headers()['Authorization'] : '', 'jhjgjhgg', array('HS256'));
             if ($this->get('typeOption') == 'get_markers') {
-
-                    $obj = $this->db->query("SELECT * FROM markers LIMIT ".$this->get('pageSize')."  OFFSET ".$this->get('pageSize')*$this->get('pages'));
+                    $obj = $this->db->query("SELECT * FROM markers order by id desc LIMIT ".$this->get('pageSize')."  OFFSET ".$this->get('pageSize')*$this->get('pages'));
 
                     $recordsTotal = $this->db->query("select COUNT(*) as count from markers");
                     $recordsTotal = (isset($recordsTotal->result()[0]->count)) ? $recordsTotal->result()[0]->count : 0 ;
@@ -137,14 +136,10 @@ class Markers extends REST_Controller {
                             }
                         }
 
-                        $this->response(array('errors' => $errors_array), REST_Controller::HTTP_UNPROCESSABLE_ENTITY);
-                    }
-                    else
-                    {
+                    }else{
                         $data = array(
                            'name' => $this->post('namep'),
                         );
-
                         $this->db->insert('polygons', $data);
                         $insert_id = $this->db->insert_id();
                         foreach($this->post('datap') as $row)
@@ -162,6 +157,28 @@ class Markers extends REST_Controller {
             }else{
                 $this->response('', REST_Controller::HTTP_NO_CONTENT);
             }
+            }
+
+        } catch (Firebase\JWT\SignatureInvalidException $e){
+            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Signature Invalid']), REST_Controller::HTTP_UNAUTHORIZED);
+        } catch (Firebase\JWT\ExpiredException $e){
+            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Signature Expired']), REST_Controller::HTTP_UNAUTHORIZED);
+        } catch (UnexpectedValueException $e){
+            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Unexpected Value']), REST_Controller::HTTP_UNAUTHORIZED);
+        }
+    }
+    public function index_delete($id)
+    {
+        try {
+            $this->decode = JWT::decode((isset(apache_request_headers()['Authorization'])) ? apache_request_headers()['Authorization'] : '', 'jhjgjhgg', array('HS256'));
+            if ($this->query('typeOption') == 'delete_point') {
+
+                $this->db->query("DELETE FROM markers WHERE id =".$id);
+        //        $this->db->query("DELETE FROM polygons WHERE id =".$this->get('pageSize'));
+
+                $this->response(array('data' => ['message' => 'Markador eliminado satisfactoriamente.']), REST_Controller::HTTP_OK);
+            }else{
+                $this->response('', REST_Controller::HTTP_NO_CONTENT);
             }
 
         } catch (Firebase\JWT\SignatureInvalidException $e){
