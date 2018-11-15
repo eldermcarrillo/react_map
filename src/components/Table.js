@@ -154,7 +154,7 @@ class Table extends React.Component {
   }
 
   render() {
-    const { columns, controller, type } = this.props;
+    const { columns, controller, type ,categoria} = this.props;
 
     return (
       <div style={{ paddingTop: '30px' }}>
@@ -202,6 +202,7 @@ class Table extends React.Component {
                 pageSize: state.pageSize,
                 filtered: state.filtered,
                 typeOption: `${type}`,
+                categoria: categoria,
                 dateinit: `${this.state.dateinit}`,
                 datefinal: `${this.state.datefinal}`,
                 data: this.props.data
@@ -230,6 +231,7 @@ Table.propTypes = {
   columns: PropTypes.array.isRequired,
   controller: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
+  categoria:PropTypes.string.isRequired,
   date: PropTypes.string.isRequired,
   excel: PropTypes.string.isRequired,
 //  exportTable: PropTypes.func.isRequired,
