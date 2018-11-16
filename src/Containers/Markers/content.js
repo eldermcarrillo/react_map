@@ -92,6 +92,8 @@ class Markers extends React.Component {
     this.onMarkerClick = this.onMarkerClick.bind(this);
     this.onMapClicked = this.onMapClicked.bind(this);
 
+    this.refreshTableDinamico = this.refreshTableDinamico.bind(this)
+    this.refreshTableEstatico = this.refreshTableEstatico.bind(this)
     this.refreshTableDinamicoReload = this.refreshTableDinamicoReload.bind(this)
     this.refreshTableEstaticoReload = this.refreshTableEstaticoReload.bind(this)
 
@@ -105,13 +107,12 @@ class Markers extends React.Component {
 
     this.onClickpolygon = this.onClickpolygon.bind(this);
 
-    this.table_markers_es = this.table_markers_es.bind();
-    this.table_markers_di = this.table_markers_di.bind();
+    this.table_markers_es = this.table_markers_es.bind(this);
+    this.table_markers_di = this.table_markers_di.bind(this);
 
   }
   componentDidMount() {
     this.SHOW();
-
   }
   onChange(e) {
     this.setState({ [e.target.name]: e.target.value });
@@ -137,8 +138,8 @@ class Markers extends React.Component {
           typeOption: 'new_marker'
         }
         this.POST('new_marker', 'markers');   
-        createBottonAndRefresh(this.refreshTableEstatico);
-        createBottonAndRefresh(this.refreshTableDinamico);
+        this.refreshTableDinamicoReload();
+        this.refreshTableEstaticoReload();
       }
     }
 
@@ -220,7 +221,13 @@ class Markers extends React.Component {
       data_points_polygono: arrayp
     })
   }
+  refreshTableEstatico(e){
+    this.childTableEstatico.filterAll(e);
+  }
 
+  refreshTableDinamico(e){
+    this.childTableDinamico.filterAll(e);
+  }
   refreshTableEstaticoReload(){
     createBottonAndRefresh(this.refreshTableEstatico);
   }
@@ -237,7 +244,6 @@ class Markers extends React.Component {
           type: 'success',
           text: response.data.data.message
         });
-        
       },
       (err) => {
 
@@ -323,7 +329,8 @@ class Markers extends React.Component {
           text: response.data.data.message
         });
         this.setState({ errors: {}, isLoading: false, alert: null });
-        createBottonAndRefresh(this.refreshTable);
+        this.refreshTableDinamicoReload();
+        this.refreshTableEstaticoReload();
       },
       (err) => {
 
@@ -335,7 +342,6 @@ class Markers extends React.Component {
     data.map(function (item, i) {
       array_line.push({ lat: parseFloat(item.lat), lng: parseFloat(item.lng) });
     });
-    Console.log(array_line);
     this.setState({
       data_markers_est: data,
       data_markers_line_est: array_line
@@ -610,7 +616,7 @@ class Markers extends React.Component {
                       date="false"
                       excel="false"
                       categoria='Estatico'
-                      ref={ref => this.refreshTableEstatico = ref}
+                      ref={ref => this.childTableEstatico = ref}
                       datamarkers = {this.table_markers_es}
                     />
                   </div>
@@ -694,7 +700,7 @@ class Markers extends React.Component {
                       date="false"
                       excel="false"
                       categoria='Dinamico'
-                      ref={ref => this.refreshTableDinamico = ref}
+                      ref={ref => this.childTableDinamico = ref}
                       datamarkers = {this.table_markers_di}
                     />
                   </div>

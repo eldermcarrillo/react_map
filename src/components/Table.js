@@ -36,7 +36,8 @@ class Table extends React.Component {
       datefinal: moment(new Date()).format('YYYY-MM-DD'),
       startDate: null,
       endDate: null,
-      focusedInput: null
+      focusedInput: null,
+      categoria:''
     };
 
     this.filterAll = this.filterAll.bind(this);
@@ -53,7 +54,7 @@ class Table extends React.Component {
     const { value } = e.target;
     const filterAll = value;
     const filtered = [filterAll];
-    this.setState({ filterAll, filtered });
+    this.setState({ filterAll, filtered});
   }
   dt(){
     return this.state.data;
