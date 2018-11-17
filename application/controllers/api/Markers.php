@@ -1,13 +1,13 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-
+/*
 require_once('vendor/autoload.php');
 require APPPATH . '/libraries/REST_Controller.php';
 
 use \Firebase\JWT\JWT;
-use Restserver\Libraries\REST_Controller;
+use Restserver\Libraries\REST_Controller;*/
 
-class Markers extends REST_Controller {
+class Markers extends CI_Controller {
 
     function __construct()
     {
@@ -25,130 +25,49 @@ class Markers extends REST_Controller {
         $this->form_validation->set_error_delimiters('', '');
         $this->key = $this->config->item('encryption_key');
         $this->decode = "";
+
+        $this->request_body = json_decode(file_get_contents('php://input'),true);
     }
 
     public function index_get()
     {
-        try {
-            $this->decode = JWT::decode((isset(apache_request_headers()['Authorization'])) ? apache_request_headers()['Authorization'] : '', 'jhjgjhgg', array('HS256'));
-            if ($this->get('typeOption') == 'get_markers') {
-                    $obj = $this->db->query("SELECT * FROM markers where categoria ='".$this->get('categoria')."' order by id desc LIMIT ".$this->get('pageSize')."  OFFSET ".$this->get('pageSize')*$this->get('pages'));
+            if ($this->input->get_post('typeOption') == 'get_markers') {
+                    $obj = $this->db->query("SELECT * FROM markers where categoria ='".$this->input->get_post('categoria')."' order by id desc LIMIT ".$this->input->get_post('pageSize')."  OFFSET ".$this->input->get_post('pageSize')*$this->input->get_post('pages'));
 
-                    $recordsTotal = $this->db->query("SELECT COUNT(*) as count FROM markers where categoria = '".$this->get('categoria')."'");
+                    $recordsTotal = $this->db->query("SELECT COUNT(*) as count FROM markers where categoria = '".$this->input->get_post('categoria')."'");
                     $recordsTotal = (isset($recordsTotal->result()[0]->count)) ? $recordsTotal->result()[0]->count : 0 ;
-
-                    $this->response(array('data' => $obj->result(), 'pages' =>$recordsTotal), REST_Controller::HTTP_OK);
+                    echo json_encode(array('data' => $obj->result(), 'pages' =>$recordsTotal));
             }else{
-                if ($this->get('typeOption') == 'get_polygons') {
+                if ($this->input->get_post('typeOption') == 'get_polygons') {
 
                     $obj = $this->db->query("SELECT p.name,ps.lat,ps.lng ,p.color FROM  polygons p inner join points ps on ps.id_polygons = p.id");
-                
-                    $this->response(array('data' => $obj->result()), REST_Controller::HTTP_OK);
+                    echo json_encode(array('data' => $obj->result()));
                 }else{
-                    $this->response('', REST_Controller::HTTP_NO_CONTENT);
+
                 }
             }
-        } catch (Firebase\JWT\SignatureInvalidException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Signature Invalid']), REST_Controller::HTTP_UNAUTHORIZED);
-        } catch (Firebase\JWT\ExpiredException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Signature Expired']), REST_Controller::HTTP_UNAUTHORIZED);
-        } catch (UnexpectedValueException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Unexpected Value']), REST_Controller::HTTP_UNAUTHORIZED);
-        }
-    }
-
-    public function find_get($id)
-    {
-        $this->response(array(), REST_Controller::HTTP_NO_CONTENT);
     }
 
     public function index_post()
     {
-        try {
-            $this->decode = JWT::decode((isset(apache_request_headers()['Authorization'])) ? apache_request_headers()['Authorization'] : '', 'jhjgjhgg', array('HS256'));
-
-            if ($this->post('typeOption') == 'new_marker') {
-                    $this->form_validation->set_data($this->post());
-                    $rules = array(
-                        array(
-                            'field'   => 'marker',
-                            'label'   => 'Marker',
-                            'rules'   => 'required'
-                        ),
-                        array(
-                            'field'   => 'lat',
-                            'label'   => 'Latitud',
-                            'rules'   => 'required'
-                        ),
-                        array(
-                            'field'   => 'lng',
-                            'label'   => 'Longitud',
-                            'rules'   => 'required'
-                        ),
-                        array(
-                            'field'   => 'categoria',
-                            'label'   => 'categoria',
-                            'rules'   => 'required'
-                        )
-                    );
-                    $this->form_validation->set_rules($rules);
-                    $errors_array = array();
-
-                    if ($this->form_validation->run() == FALSE)
-                    {
-                        foreach($rules as $row){
-                            $field = $row['field'];
-                            $error = form_error($field);
-                            if($error){
-                                $errors_array[$field] = $error;
-                            }
-                        }
-
-                        $this->response(array('errors' => $errors_array), REST_Controller::HTTP_UNPROCESSABLE_ENTITY);
-                    }
-                    else
-                    {
+            if ($this->input->post('typeOption') == 'new_marker') {
                         $data = array(
-                           'name' => $this->post('marker'),
-                           'lat' => $this->post('lat'),
-                           'lng' => $this->post('lng'),
-                           'categoria' => $this->post('categoria'),
+                           'name' => $this->input->get_post('marker'),
+                           'lat' => $this->input->get_post('lat'),
+                           'lng' => $this->input->get_post('lng'),
+                           'categoria' => $this->input->get_post('categoria'),
                         );
-
                         $this->db->insert('markers', $data);
-                        $this->response(array('data' => ['message' => 'Markador almacenado satifactoriamente.']), REST_Controller::HTTP_CREATED);
-                    }
+                        echo json_encode(array('data' => ['message' => 'Markador almacenado satifactoriamente.']));
             }else{
-                if ($this->post('typeOption') == 'new_polygon') {
-                    $this->form_validation->set_data($this->post());
-                    $rules = array(
-                        array(
-                            'field'   => 'namep',
-                            'label'   => 'namep',
-                            'rules'   => 'required'
-                        ),
-                    );
-                    $this->form_validation->set_rules($rules);
-                    $errors_array = array();
-
-                    if ($this->form_validation->run() == FALSE)
-                    {
-                        foreach($rules as $row){
-                            $field = $row['field'];
-                            $error = form_error($field);
-                            if($error){
-                                $errors_array[$field] = $error;
-                            }
-                        }
-
-                    }else{
+                if ($this->input->get_post('typeOption') == 'new_polygon') {
                         $data = array(
-                           'name' => $this->post('namep'),
-                           'color' => $this->post('color'),
+                           'name' => $this->input->get_post('namep'),
+                           'color' => $this->input->get_post('color'),
                         );
                         $this->db->insert('polygons', $data);
                         $insert_id = $this->db->insert_id();
-                        foreach($this->post('data_points_polygono') as $row)
+                        foreach($this->input->get_post('data_points_polygono') as $row)
                         {
                             $data_points = array(
                                 'lat' => $row['lat'],
@@ -157,41 +76,18 @@ class Markers extends REST_Controller {
                              );
                             $this->db->insert('points', $data_points);
                         }
-                    
-                        $this->response(array('data' => ['message' => 'Polygono almacenado exitosamente' ]), REST_Controller::HTTP_CREATED);
-                    }
-            }else{
-                $this->response('', REST_Controller::HTTP_NO_CONTENT);
+                        echo json_encode(array('data' => ['message' => 'Polygono almacenado exitosamente' ]));
+                        }else{
+
+                        }
             }
-            }
-        } catch (Firebase\JWT\SignatureInvalidException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Signature Invalid']), REST_Controller::HTTP_UNAUTHORIZED);
-        } catch (Firebase\JWT\ExpiredException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Signature Expired']), REST_Controller::HTTP_UNAUTHORIZED);
-        } catch (UnexpectedValueException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Unexpected Value']), REST_Controller::HTTP_UNAUTHORIZED);
-        }
     }
     public function index_delete($id)
     {
-        try {
-            $this->decode = JWT::decode((isset(apache_request_headers()['Authorization'])) ? apache_request_headers()['Authorization'] : '', 'jhjgjhgg', array('HS256'));
-            if ($this->query('typeOption') == 'delete_point') {
-
-                $this->db->query("DELETE FROM markers WHERE id =".$id);
-        //        $this->db->query("DELETE FROM polygons WHERE id =".$this->get('pageSize'));
-
-                $this->response(array('data' => ['message' => 'Markador eliminado satisfactoriamente.']), REST_Controller::HTTP_OK);
+            if ($this->input->get_post('typeOption') == 'delete_point') {
+                $this->db->query("DELETE FROM markers WHERE id =".$this->input->get_post('id'));
+                echo json_encode(array('data' => ['message' => 'Markador eliminado satisfactoriamente.']));
             }else{
-                $this->response('', REST_Controller::HTTP_NO_CONTENT);
             }
-
-        } catch (Firebase\JWT\SignatureInvalidException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Signature Invalid']), REST_Controller::HTTP_UNAUTHORIZED);
-        } catch (Firebase\JWT\ExpiredException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Signature Expired']), REST_Controller::HTTP_UNAUTHORIZED);
-        } catch (UnexpectedValueException $e){
-            $this->response(array('errors' => ['message' => 'UNAUTHORIZED Unexpected Value']), REST_Controller::HTTP_UNAUTHORIZED);
-        }
     }
 }

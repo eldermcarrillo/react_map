@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
 import Tabs from 'react-bootstrap/lib/Tabs';
+import {Alert as Alertapi} from 'react-bootstrap';
 import Tab from 'react-bootstrap/lib/Tab';
 import TextFieldGroup from '../../components/TextFieldGroup';
 
@@ -20,12 +21,9 @@ import GoogleMapReact from 'google-map-react';
 import { Map, Marker, GoogleApiWrapper, Polygon, Polyline, InfoWindow } from 'google-maps-react';
 
 
-import { addFlashMessageModal } from '../../actions/flashMessages';
-
-
 var inside = require('point-in-polygon');
 import map from 'lodash/map';
-import FlashMessagesListModal from '../../components/flash/FlashMessagesListModal';
+
 import SweetAlert from 'react-bootstrap-sweetalert';
 window.SweetAlert = SweetAlert;
 
@@ -33,16 +31,18 @@ import axios from 'axios';
 import { API } from '../../utils/constants';
 import { tokenCopyPaste } from '../../utils/functions';
 import ReactTable from "react-table";
+var qs = require('qs');
+
 
 
 class Markers extends React.Component {
 
   static defaultProps = {
     center: {
-      lat: 12.41933674043029,
-      lng: -84.94020919557755
+      lat: 12.129065010840934,
+      lng: -86.26632162839792
     },
-    zoom: 8,
+    zoom: 17,
     key: 'AIzaSyAXA_oFfYsUVJDJ-tWallGbtDmJhYk71no'
   };
 
@@ -82,13 +82,16 @@ class Markers extends React.Component {
       InfoWindowpolygon: {},
       name_figura: '',
       //////////////////////////
-      filtered:[],
-      data_markers_din:[],
-      data_markers_est:[],
+      filtered: [],
+      data_markers_din: [],
+      data_markers_est: [],
       pages_est: 0,
       pages_din: 0,
       typeOption: '',
       categoria_cns: '',
+      //////alery api
+      showalertapi: false,
+      Messageapi:''
     }
     //formularios
     this.onChange = this.onChange.bind(this);
@@ -118,9 +121,16 @@ class Markers extends React.Component {
     this.delete = this.delete.bind(this);
 
     this.refreshtable = this.refreshtable.bind(this);
+
+    //alert api
+    this.handleDismissalertapi = this.handleDismissalertapi.bind(this);
+    this.handleShowalertapi = this.handleShowalertapi.bind(this);
+
+    this.resetmapifon = this.resetmapifon.bind(this);
+
   }
   componentDidMount() {
-    this.get_polygons();
+    // this.get_polygons();
   }
   get(type, controller, marker) {
     var pages = '';
@@ -133,7 +143,7 @@ class Markers extends React.Component {
       pagesiz = this.state.pageSize_din;
     }
     axios.get(
-      `${API}${controller}`,
+      'http://localhost:8080/react_map/api/markers/index_get',
       {
         params: {
           pages: pages,
@@ -144,39 +154,46 @@ class Markers extends React.Component {
         headers: { Authorization: tokenCopyPaste() }
       }).then((res) => {
         if (type == 'get_markers') {
-       //   this.table_markers_view(res.data.data, marker);
+
         } else {
           this.maps_polygons_view(res.data.data);
         }
-        this.setState({ errors: {}, isLoading: false, parameters: [] });
+        this.setState({ errors: {}, isLoading: false, parameters: [] , });
       });
   }
   post(type, controller) {
-    //this.refreshtable();
-    axios.post(`${API}${controller}`,
-      this.state.parameters,
-      {
-        headers: { Authorization: tokenCopyPaste() }
-      }).then((res) => {
+    axios.post('http://localhost:8080/react_map/api/markers/index_post',
+      qs.stringify({
+        categoria: this.state.categoria,
+        lat: this.state.lat,
+        lng: this.lng,
+        typeOption: type,
+        marker: this.state.marker,
+        namep: this.state.namep,
+        color: this.state.color,
+        data_points_polygono: this.state.data_points_polygono
+      })).then((res) => {
         if (type == 'new_polygon') {
           this.get_polygons();
+          this.refreshtable();
         } else {
-          refreshtable()
+          this.get_polygons();
+          this.refreshtable();
         }
-        this.setState({ errors: {}, isLoading: false, parameters: [], lat: '', lng: '', marker: '', categoria: '', data_points_polygono: [], namep: '', });
+        this.setState({ errors: {}, isLoading: false, parameters: [], lat: '', lng: '', marker: '', categoria: '', data_points_polygono: [], namep: '',Messageapi :res.data.data.message });
+        this.handleShowalertapi();
       });
   }
   delete(row, type, controller) {
-    axios.delete(`${API}${controller}/` + row.id,
+    axios.delete('http://localhost:8080/react_map/api/markers/index_delete/' + row.id,
       {
         params: this.state.parameters,
         headers: { Authorization: tokenCopyPaste() }
       }).then((res) => {
-        this.get('get_markers', 'Markers', 'Estatico');
-        this.get('get_markers', 'Markers', 'Dinamico');
         this.onCancel();
-        refreshtable();
-        this.setState({ errors: {}, isLoading: false, parameters: [] });
+        this.refreshtable();
+        this.setState({ errors: {}, isLoading: false, parameters: [], Messageapi :res.data.data.message});
+        this.handleShowalertapi();
       });
   }
 
@@ -196,10 +213,11 @@ class Markers extends React.Component {
         data_markers_line_din: array_line
       });
     }
+    this.get_polygons();
   }
-  refreshtable(){
+  refreshtable() {
     this.setState({
-      filtered:[]
+      filtered: []
     })
   }
   get_polygons() {
@@ -230,7 +248,6 @@ class Markers extends React.Component {
       nom_poly: nmpoly
     });
   }
-
   onChange(e) {
     this.setState({ [e.target.name]: e.target.value });
   }
@@ -309,13 +326,16 @@ class Markers extends React.Component {
     this.setState({
       selectedPlace: props,
       activeMarker: marker,
-      showingInfoWindow: true
+      showingInfoWindow: true,
+
+      showInfoWindow: false,
     });
   }
   onMapClicked(props, map, e) {
     if (this.state.showingInfoWindow) {
       this.setState({
         showingInfoWindow: false,
+        showInfoWindow: false,
         activeMarker: null
       })
     }
@@ -401,6 +421,16 @@ class Markers extends React.Component {
       InfoWindowpolygon: { lat: props.paths[0].lat, lng: props.paths[0].lng }
     });
   }
+  handleDismissalertapi() {
+    this.setState({ showalertapi: false,Messageapi:'' });
+  }
+
+  handleShowalertapi() {
+    this.setState({ showalertapi: true });
+  }
+  resetmapifon(){
+    this.setState({ showalertapi: false,Messageapi:'',showInfoWindow:false,showingInfoWindow:false });
+  }
   render() {
     const { errors } = this.state;
     const vm = this;
@@ -473,12 +503,19 @@ class Markers extends React.Component {
           <div className="row">
             <legend>
               <h2><i className="fa fa-sitemap"></i>Markers</h2>
-              <FlashMessagesListModal />
+              {
+                this.state.showalertapi ?
+                  <Alertapi bsStyle="info" onDismiss={this.handleDismissalertapi}>
+                    {this.state.Messageapi}
+                  </Alertapi>
+                  :
+                  ''
+              }
               {this.state.alert}
             </legend>
           </div>
           <div className="row">
-            <Tabs activeKey={this.state.key} onSelect={this.handleSelect} id="uncontrolled-tab-example" bsStyle="tabs">
+            <Tabs activeKey={this.state.key} onSelect={this.handleSelect} id="uncontrolled-tab-example" onSelect={this.resetmapifon} bsStyle="tabs">
               <Tab eventKey={1} title="Markers">
                 <div className="row">
                   <div className="col-md-12" style={{ paddingTop: '10px' }}>
@@ -588,7 +625,7 @@ class Markers extends React.Component {
                     </div>
                   </div>
                   <div className="col-md-4">
-          
+
                   </div>
                   <button name="btn-guardar-poligono" disabled={this.state.isLoading} onClick={this.onSubmit} className="btn btn-primary pull-right">Guardar</button>
                 </div>
@@ -618,7 +655,7 @@ class Markers extends React.Component {
               <Tab eventKey={3} title="Estaticos">
                 <div className="row" style={{ paddingTop: '10px' }}>
                   <div className="col-md-12">
-                  <ReactTable
+                    <ReactTable
                       filtered={this.state.filtered}
                       defaultFilterMethod={(filter, row) =>
                         String(row[filter.id]) === filter.value
@@ -626,7 +663,7 @@ class Markers extends React.Component {
                       columns={columns}
                       ref={r => (this.selectTable = r)}
                       className="-striped -highlight"
-                      defaultPageSize={10}
+                      defaultPageSize={5}
                       data={this.state.data_markers_est}
                       pages={this.state.pages_est}
                       loading={this.state.loading}
@@ -636,24 +673,25 @@ class Markers extends React.Component {
                       filterAll={true}
                       onFetchData={(state, instance) => {
                         this.setState({ loading: true })
-                        axios.get(`${API}${'Markers'}`, {
+                        axios.get('http://localhost:8080/react_map/api/markers/index_get', {
                           params: {
                             pages: state.page,
                             pageSize: state.pageSize,
                             filtered: state.filtered,
                             typeOption: 'get_markers',
-                            categoria:'Estatico'
+                            categoria: 'Estatico'
                           },
-                          headers: {  Authorization: tokenCopyPaste() }
+                          headers: { Authorization: tokenCopyPaste() }
                         })
                           .then((res) => {
                             this.setState({
                               data_markers_est: res.data.data,
-                              //fulldata: res.data,
                               pages_est: Math.ceil(res.data.pages / state.pageSize),
                               loading: false
                             });
+                            this.get_polygons();
                             this.table_markers_view(res.data.data, 'Estatico');
+                            //    this.get_polygons();
                           })
                       }
                       }
@@ -740,7 +778,7 @@ class Markers extends React.Component {
                       columns={columns}
                       ref={r => (this.selectTable = r)}
                       className="-striped -highlight"
-                      defaultPageSize={10}
+                      defaultPageSize={5}
                       data={this.state.data_markers_din}
                       pages={this.state.pages_din}
                       loading={this.state.loading}
@@ -750,23 +788,25 @@ class Markers extends React.Component {
                       filterAll={true}
                       onFetchData={(state, instance) => {
                         this.setState({ loading: true })
-                        axios.get(`${API}${'Markers'}`, {
+                        axios.get('http://localhost:8080/react_map/api/markers/index_get', {
                           params: {
                             pages: state.page,
                             pageSize: state.pageSize,
                             filtered: state.filtered,
                             typeOption: 'get_markers',
-                            categoria:'Dinamico'
+                            categoria: 'Dinamico'
                           },
-                          headers: {  Authorization: tokenCopyPaste() }
+                          headers: { Authorization: tokenCopyPaste() }
                         })
                           .then((res) => {
-                            this.table_markers_view(res.data.data, 'Dinamico');
                             this.setState({
                               data_markers_din: res.data.data,
                               pages_din: Math.ceil(res.data.pages / state.pageSize),
                               loading: false
-                            })
+                            });
+                            this.get_polygons();
+                            this.table_markers_view(res.data.data, 'Dinamico');
+                            //  this.get_polygons();
                           })
                       }
                       }
@@ -786,11 +826,12 @@ class Markers extends React.Component {
                             key={i}
                             paths={vm.state.data_points_polygons[0][item]}
                             strokeColor='#000000'
-                            name={item}
+                            namefigura={item}
                             strokeOpacity={0.8}
                             strokeWeight={2}
                             fillColor={vm.state.data_points_polygons[0][item][0]['color']}
                             fillOpacity={0.35}
+                            onClick={vm.onClickpolygon}
                           />
                         })
                       }

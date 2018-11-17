@@ -7,10 +7,9 @@ import { createStore, applyMiddleware, compose } from 'redux';
 import thunk from 'redux-thunk';
 
 import Markers from './content';
-import rootReducer from '../../rootReducer';
+
 
 const store = createStore(
-  rootReducer,
   compose(
     applyMiddleware(thunk),
     window.devToolsExtension ? window.devToolsExtension() : f => f
