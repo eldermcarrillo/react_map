@@ -143,7 +143,7 @@ class Markers extends React.Component {
       pagesiz = this.state.pageSize_din;
     }
     axios.get(
-      'http://localhost:8080/react_map/api/markers/index_get',
+      'http://localhost/react_map/api/markers/index_get',
       {
         params: {
           pages: pages,
@@ -162,7 +162,7 @@ class Markers extends React.Component {
       });
   }
   post(type, controller) {
-    axios.post('http://localhost:8080/react_map/api/markers/index_post',
+    axios.post('http://localhost/react_map/api/markers/index_post',
       qs.stringify({
         categoria: this.state.categoria,
         lat: this.state.lat,
@@ -185,7 +185,7 @@ class Markers extends React.Component {
       });
   }
   delete(row, type, controller) {
-    axios.delete('http://localhost:8080/react_map/api/markers/index_delete/' + row.id,
+    axios.delete('http://localhost/react_map/api/markers/index_delete/' + row.id,
       {
         params: this.state.parameters,
         headers: { Authorization: tokenCopyPaste() }
@@ -289,14 +289,12 @@ class Markers extends React.Component {
     if (Validator.isEmpty(String(e.categoria))) {
       errors.categoria = 'Este campo es requerido';
     }
-    /*  if (Validator.isEmpty(String(e.namep))) {
-        errors.e.namep = 'Este campo es requerido';
-      }*/
     return {
       errors,
       isValid: isEmpty(errors)
     }
   }
+  
   isValid() {
     const { errors, isValid } = this.validateInput(this.state);
     if (!isValid) {
@@ -454,14 +452,14 @@ class Markers extends React.Component {
         Header: () => <b>Poligono</b>,
         Cell: (row) => (
           this.pointpolygon(row) == "" ?
-            "No Contenido"
+          <center> <p style={{background:"#DB606E" }}>No Contenido</p></center>
             :
-            this.pointpolygon(row)
+            <center><p style={{background:"#7ED321" }}>{this.pointpolygon(row)}</p></center>
         ),
         filterable: false
       },
       {
-        Header: () => <b>Estado Point</b>,
+        Header: () => <b>Eliminar</b>,
         Cell: (row) => (
           <center><a onClick={(e) => this.deletepoint(row)} name="a-delete" style={{ textDecoration: 'none', color: '#e83434', fontSize: 'large', cursor: 'pointer' }}><i className="glyphicon glyphicon-trash"></i></a></center>
         ),
@@ -528,7 +526,7 @@ class Markers extends React.Component {
                           value={this.state.marker}
                           field="marker"
                           placeHolder=""
-                          required="true"
+                     
                         />
                       </div>
                     </div>
@@ -542,6 +540,7 @@ class Markers extends React.Component {
                           field="lat"
                           placeHolder=""
                           required="true"
+                  
                         />
                       </div>
                     </div>
@@ -555,6 +554,7 @@ class Markers extends React.Component {
                           field="lng"
                           placeHolder=""
                           required="true"
+                   
                         />
                       </div>
                     </div>
@@ -567,7 +567,7 @@ class Markers extends React.Component {
                           onChange={this.onChange}
                           value={this.state.categoria}
                         >
-                          <option value="" disabled>Seleccione porfavor</option>
+                          <option value="" disabled>Seleccione por favor</option>
                           <option value="Estatico">Estatico</option>
                           <option value="Dinamico">Dinamico</option>
                         </select>
@@ -673,7 +673,7 @@ class Markers extends React.Component {
                       filterAll={true}
                       onFetchData={(state, instance) => {
                         this.setState({ loading: true })
-                        axios.get('http://localhost:8080/react_map/api/markers/index_get', {
+                        axios.get('http://localhost/react_map/api/markers/index_get', {
                           params: {
                             pages: state.page,
                             pageSize: state.pageSize,
@@ -691,7 +691,6 @@ class Markers extends React.Component {
                             });
                             this.get_polygons();
                             this.table_markers_view(res.data.data, 'Estatico');
-                            //    this.get_polygons();
                           })
                       }
                       }
@@ -788,7 +787,7 @@ class Markers extends React.Component {
                       filterAll={true}
                       onFetchData={(state, instance) => {
                         this.setState({ loading: true })
-                        axios.get('http://localhost:8080/react_map/api/markers/index_get', {
+                        axios.get('http://localhost/react_map/api/markers/index_get', {
                           params: {
                             pages: state.page,
                             pageSize: state.pageSize,
